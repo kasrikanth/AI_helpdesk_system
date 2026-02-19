@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# floders that should be ignored
+kb_store/
+
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+*.egg
+build/
+dist/
+
+# SQLite database files
+*.sqlite3
+
+# Logs
+*.log
+
+# IDE specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+
+# Coverage reports
+htmlcov/
+.coverage
+*.cover
+
+# Test artifacts
+.tox/
+.pytest_cache/
+*.pytest_cache
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swm
+*.swo
+*.orig
+
+# Node.js dependencies
+node_modules/
