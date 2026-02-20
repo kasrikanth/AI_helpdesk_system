@@ -11,7 +11,7 @@ embedder = OpenAIEmbeddings(
     openai_api_key=OPENAI_API_KEY
 )
 
-def retrieve_kb(question: str, k: int = 2):
+def retrieve_kb(question: str, k: int = 1):
     db = SessionLocal()
     query_embedding = embedder.embed_query(question)
 
