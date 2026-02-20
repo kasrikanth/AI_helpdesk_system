@@ -91,11 +91,11 @@ class TicketResponse(BaseModel):
     status: str
     user_role: str
     context: dict
-    ai_analysis: dict
     created_at: datetime
     updated_at: datetime
+
     model_config = {
-        "from_attributes": True   #from_attributes = True (Pydantic v2)
+        "from_attributes": True
     }
 
 class TicketUpdate(BaseModel):

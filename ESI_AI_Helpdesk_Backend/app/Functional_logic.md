@@ -34,9 +34,6 @@
    - Manages role creation and assignment.
 
 ### Ticket Management APIs
-1. **Create Ticket**:
-   - Endpoint: `/tickets/create`
-   - Allows users to create a new ticket.
 2. **Update Ticket**:
    - Endpoint: `/tickets/update/{ticket_id}`
    - Enables agents to update ticket details.
