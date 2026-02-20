@@ -127,9 +127,10 @@ def chat(
 
         # Calculate Confidence using advanced logic
         confidence = compute_response_confidence(
-            kb_documents=[{"similarity": r.get("similarity") or r.get("score", 0.0)}
-                for r in documents], 
-                answer=answer)
+            docs=[{"similarity": r.get("similarity") or r.get("score", 0.0)}
+                for r in documents],
+            response_text=answer
+        )
         
         # Severity check
         severity = classify_severity(req.message)
