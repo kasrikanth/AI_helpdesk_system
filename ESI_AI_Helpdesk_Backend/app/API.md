@@ -40,24 +40,6 @@
      ```
 
 ### Ticket Management
-1. **Create Ticket**
-   - **Endpoint**: `POST /tickets/create`
-   - **Description**: Creates a new ticket.
-   - **Request Schema**:
-     ```json
-     {
-       "title": "string",
-       "description": "string",
-       "priority": "string"
-     }
-     ```
-   - **Response Schema**:
-     ```json
-     {
-       "ticket_id": "string",
-       "message": "Ticket created successfully."
-     }
-     ```
 
 2. **Update Ticket**
    - **Endpoint**: `PUT /tickets/update/{ticket_id}`
