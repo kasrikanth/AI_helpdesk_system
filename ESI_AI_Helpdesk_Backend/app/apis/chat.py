@@ -87,7 +87,7 @@ def chat(
             assistant_message = Message(
             conversation_id=conversation.id,
             role="assistant",
-            confinence = 0.0,
+            confidence=0.0,
             content=f"Guardrail triggered: {guardrail.reason}"
             )
             db.add(assistant_message)
