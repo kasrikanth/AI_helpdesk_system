@@ -19,7 +19,6 @@ from app.llm_services.retriever import retrieve_kb
 from app.llm_services.llm import generate_answer, compute_response_confidence
 from app.llm_services.escalate_classifier import classify_tier, classify_severity, should_escalate
 from app.utils.Guardrail import check_guardrail
-from app.apis.pydantic_models import TierLevel, SeverityLevel
 from app.models.database import User
 from uuid import uuid4
 from pathlib import Path

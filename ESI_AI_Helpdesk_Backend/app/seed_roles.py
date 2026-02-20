@@ -37,7 +37,7 @@ def seed():
         db.add(user)
         db.commit()
 
-    print("✅ Roles and Super Admin created")
+    print("Roles and Super Admin created")
 
 if __name__ == "__main__":
     seed()

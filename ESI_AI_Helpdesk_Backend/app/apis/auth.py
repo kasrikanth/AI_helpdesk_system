@@ -27,7 +27,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         "role_level": user.role.level,}
     access_token = create_access_token(token_data)
 
-    # ✅ CREATE SESSION ENTRY
+    # CREATE SESSION ENTRY
     session = UserSession(
         user_id=user.id,
         access_token=access_token,
