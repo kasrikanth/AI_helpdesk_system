@@ -1,11 +1,11 @@
 # Metrics.py
+from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.apis.api_schema import MetricsSummary, MetricsTrends, TrendDataPoint
 from app.models.database import Conversation, Message, Ticket, GuardrailEvent
 from app.utils.config import get_db
-
 
 metrics_router = APIRouter()
 
@@ -80,54 +80,35 @@ def fetch_metrics_overview(db: Session = Depends(get_db)):
             detail="Unable to compute metrics summary."
         )
 
-
 @metrics_router.get("/trends", response_model=MetricsTrends)
 def fetch_metrics_trends(db: Session = Depends(get_db)):
     try:
-        # Daily Conversation Volume
-        conversation_trend = db.query(
-            func.date(Conversation.created_at),
-            func.count(Conversation.id)
-        ).group_by(
-            func.date(Conversation.created_at)
-        ).order_by(
-            func.date(Conversation.created_at)
-        ).all()
+
+        # Conversation Trend
+        conversation_trend = db.query(func.date_trunc('day', Conversation.created_at).label("day"),
+            func.count(Conversation.id)).group_by("day").order_by("day").all()
 
         conversation_points = [
-            TrendDataPoint(date=str(day), value=count)
-            for day, count in conversation_trend
-        ]
+            TrendDataPoint(start_date=day,
+                end_date=day + timedelta(days=1),value=count)
+            for day, count in conversation_trend]
 
-        # Guardrail Activation Trend
-        guardrail_trend = db.query(
-            func.date(GuardrailEvent.created_at),
-            func.count(GuardrailEvent.id)
-        ).group_by(
-            func.date(GuardrailEvent.created_at)
-        ).order_by(
-            func.date(GuardrailEvent.created_at)
-        ).all()
+        # Guardrail Trend
+        guardrail_trend = db.query(func.date_trunc('day', GuardrailEvent.created_at).label("day"),
+            func.count(GuardrailEvent.id)).group_by("day").order_by("day").all()
 
         guardrail_points = [
-            TrendDataPoint(date=str(day), value=count)
-            for day, count in guardrail_trend
-        ]
+            TrendDataPoint(start_date=day,
+                end_date=day + timedelta(days=1),value=count)
+            for day, count in guardrail_trend]
 
-        # Ticket Volume Trend
-        ticket_trend = db.query(
-            func.date(Ticket.created_at),
-            func.count(Ticket.id)
-        ).group_by(
-            func.date(Ticket.created_at)
-        ).order_by(
-            func.date(Ticket.created_at)
-        ).all()
+        # Ticket Trend
+        ticket_trend = db.query(func.date_trunc('day', Ticket.created_at).label("day"),
+            func.count(Ticket.id)).group_by("day").order_by("day").all()
 
-        ticket_points = [
-            TrendDataPoint(date=str(day), value=count)
-            for day, count in ticket_trend
-        ]
+        ticket_points = [TrendDataPoint(start_date=day,
+                    end_date=day + timedelta(days=1),value=count)
+            for day, count in ticket_trend]
 
         return MetricsTrends(
             conversation_volume=conversation_points,
@@ -135,8 +116,8 @@ def fetch_metrics_trends(db: Session = Depends(get_db)):
             ticket_volume=ticket_points
         )
 
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Unable to generate trend metrics."
+            status_code=500,
+            detail=str(e)
         )
