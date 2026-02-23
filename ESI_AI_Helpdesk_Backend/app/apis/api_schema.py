@@ -116,7 +116,6 @@ class KBUpdateRequest(BaseModel):
     kb_id: str
 
 
-
 # Metrics API Schemas
 class MetricsSummary(BaseModel):
     """Summary metrics response."""
@@ -128,21 +127,15 @@ class MetricsSummary(BaseModel):
     tickets_by_tier: Dict[str, int]
     tickets_by_severity: Dict[str, int]
 
-
 class TrendDataPoint(BaseModel):
-    """Single data point in trend data."""
-    timestamp: datetime
-    value: float
-
+    start_date: datetime
+    end_date: datetime
+    value: int
 
 class MetricsTrends(BaseModel):
-    """Trend metrics response."""
     conversation_volume: List[TrendDataPoint]
+    guardrail_activations: List[TrendDataPoint]
     ticket_volume: List[TrendDataPoint]
-    deflection_rate: List[TrendDataPoint]
-    avg_confidence: List[TrendDataPoint]
-
-
 
 
 # -------- Response --------

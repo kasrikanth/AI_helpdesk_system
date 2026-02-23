@@ -33,15 +33,32 @@ def get_ticket(
 
 @ticket_router.get("/", response_model=List[TicketResponse])
 def get_all_tickets(
+    status: str = None,
+    tier: str = None,
+    severity: str = None,
+    limit: int = 20,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
-):
+    current_user=Depends(get_current_user)):
+
     require_roles(
     ["support_engineer", "admin", "super_admin"],
-    current_user
-)
-    tickets = db.query(Ticket).order_by(Ticket.created_at.desc()).all()
-    return tickets
+    current_user)
+    try:
+        query = db.query(Ticket)
+        
+        if status:
+            query = query.filter(Ticket.status == status)
+        if tier:
+            query = query.filter(Ticket.tier == tier)
+        if severity:
+            query = query.filter(Ticket.severity == severity)
+        tickets = query.order_by(Ticket.created_at.desc()).limit(limit).all()
+        
+        return tickets
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to list tickets")
+
 
 
 @ticket_router.patch("/update/{ticket_id}", response_model=TicketResponse)

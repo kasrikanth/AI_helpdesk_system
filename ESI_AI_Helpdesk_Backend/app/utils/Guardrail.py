@@ -2,67 +2,165 @@
 
 from app.apis.api_schema import GuardrailStatus
 
-RISKY_TERMS = [
-    # Database / Destructive Operations
-    "delete production", "drop table", "drop database", "truncate table",
-    "delete from", "delete all", "wipe database", "destroy data",
-    "rollback production", "disable backup",
+CRITICAL_TERMS = {
 
-    # Privilege Escalation & Access Control
-    "grant admin", "grant root", "grant superuser", "revoke access",
-    "bypass authentication", "bypass login", "disable auth",
-    "disable mfa", "remove permissions", "escalate privileges",
+    # Total Data Destruction
+    "drop database",
+    "wipe database",
+    "destroy data",
+    "corrupt database",
 
-    # Hacking & Exploitation
-    "hack", "exploit", "zero-day", "0day", "buffer overflow",
-    "sql injection", "xss attack", "cross-site scripting",
-    "remote code execution", "rce payload", "reverse shell",
-    "privilege escalation", "path traversal", "directory traversal",
+    # Full System Compromise
+    "remote code execution",
+    "rce payload",
+    "reverse shell",
+    "backdoor",
+    "rootkit",
 
-    # Malware & Malicious Code
-    "ransomware", "keylogger", "rootkit", "trojan", "backdoor",
-    "botnet", "malware", "spyware", "worm payload", "virus payload",
-    "inject malicious", "obfuscated code",
+    # Malware / Extortion
+    "ransomware",
+
+    # Critical Infra Shutdown
+    "shutdown server",
+    "disable firewall",
+    "bypass firewall",
+
+    # Data Exfiltration at Scale
+    "exfiltrate data",
+    "data exfiltration",
+
+    # Critical Legal / Criminal
+    "fraud",
+    "launder",
+
+    # Severe Physical Threat
+    "bomb",
+    "weapon"
+}
+
+HIGH_TERMS = {
+
+    # Destructive SQL / Data Manipulation
+    "drop table",
+    "truncate table",
+    "delete production",
+    "delete all",
+
+    # Privilege Escalation
+    "grant root",
+    "grant superuser",
+    "grant admin",
+    "escalate privileges",
+    "privilege escalation",
+
+    # Authentication Bypass
+    "bypass authentication",
+    "bypass login",
+    "disable auth",
+    "disable mfa",
+
+    # Exploits
+    "sql injection",
+    "xss attack",
+    "cross-site scripting",
+    "zero-day",
+    "0day",
+    "buffer overflow",
+    "path traversal",
+    "directory traversal",
+
+    # Credential Attacks
+    "steal credentials",
+    "dump passwords",
+    "brute force",
+    "password spray",
+    "credential stuffing",
+    "api key leak",
 
     # Network Attacks
-    "ddos", "dos attack", "syn flood", "ping flood", "packet flood",
-    "port scan", "network sniff", "man in the middle", "mitm",
-    "arp spoofing", "dns spoofing", "ip spoofing",
+    "ddos",
+    "dos attack",
+    "syn flood",
+    "man in the middle",
+    "mitm",
+    "arp spoofing",
+    "dns spoofing",
+    "ip spoofing",
 
-    # Social Engineering & Phishing
-    "phish", "spear phish", "credential harvest", "fake login",
-    "impersonate user", "social engineer", "pretexting",
+    # Infra Tampering
+    "disable logging",
+    "disable monitoring",
+    "clear audit trail",
+    "overwrite logs",
 
-    # Credential & Secret Theft
-    "steal credentials", "dump passwords", "password spray",
-    "brute force", "credential stuffing", "api key leak",
-    "expose secret", "exfiltrate data", "data exfiltration",
+    # Social Engineering
+    "phish",
+    "spear phish",
+    "credential harvest",
+    "impersonate user",
+    "social engineer",
+}
 
-    # Infrastructure Sabotage
-    "security breach", "disable firewall", "disable logging",
-    "disable monitoring", "kill process", "shutdown server",
-    "corrupt database", "overwrite logs", "clear audit trail",
-    "bypass firewall", "disable ssl", "disable tls",
+MEDIUM_TERMS = {
 
-    # Legal / Compliance Risk
-    "illegal", "violate gdpr", "violate hipaa", "bypass compliance",
-    "launder", "fraud", "counterfeit",
+    # SQL Contextual
+    "delete from",
+    "rollback production",
 
-    # Physical Threats
-    "bomb", "threat", "weapon",
-]
+    # Access Control Changes
+    "revoke access",
+    "remove permissions",
 
+    # Malware Keywords (context-sensitive)
+    "trojan",
+    "virus payload",
+    "worm payload",
+    "malware",
+    "spyware",
+    "keylogger",
+
+    # Network Recon
+    "port scan",
+    "network sniff",
+    "packet flood",
+    "ping flood",
+
+    # Code Risk
+    "inject malicious",
+    "obfuscated code",
+
+    # Security Configuration
+    "disable ssl",
+    "disable tls",
+    "disable backup",
+    "kill process",
+
+    # Compliance / Legal
+    "illegal",
+    "violate gdpr",
+    "violate hipaa",
+    "bypass compliance",
+    "counterfeit",
+
+    # Social Engineering (soft forms)
+    "fake login",
+    "pretexting",
+
+    # General Threat
+    "threat"
+}
 
 def check_guardrail(message: str) -> GuardrailStatus:
     msg = message.lower()
-
-    for term in RISKY_TERMS:
+    for term in CRITICAL_TERMS:
         if term in msg:
-            return GuardrailStatus(
-                blocked=True,
-                reason=f"Detected restricted request: '{term}'",
-                severity="HIGH"
-            )
-
+            return GuardrailStatus(blocked=True, reason=f"Restricted: '{term}'", severity="CRITICAL")
+    for term in HIGH_TERMS:
+        if term in msg:
+            return GuardrailStatus(blocked=True, reason=f"Restricted: '{term}'", severity="HIGH")
+    for term in MEDIUM_TERMS:
+        if term in msg:
+            return GuardrailStatus(blocked=True, reason=f"Restricted: '{term}'", severity="MEDIUM")
+        
     return GuardrailStatus(blocked=False, reason=None, severity="LOW")
 

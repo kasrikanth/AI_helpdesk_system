@@ -2,22 +2,34 @@
 
 from app.apis.pydantic_models import TierLevel, SeverityLevel
 
-# LOW_IMPACT = ["what", "who", "when", "where", "help desk"]
-# MEDIUM_IMPACT = ["reset", "password", "login", "troubleshoot", "how to"]
-# HIGH_IMPACT = ["system down", "outage", "failure", "crash"]
-# CRITICAL_IMPACT = ["delete production", "data loss", "security breach"]
+TIER_4_KEYWORDS = [
+    "catastrophic issue", "major incident", "business critical","service collapse", "environment unavailable", 
+    "customer impact severe", "revenue blocked", "compliance violation", "regulatory breach"
+]
 
-TIER_4_KEYWORDS = ["data loss", "production down", "security breach"]
-TIER_3_KEYWORDS = ["system down", "outage", "failure", "crash"]
-TIER_2_KEYWORDS = ["reset", "password", "login", "troubleshoot", "how to"]
-TIER_0_KEYWORDS = ["what", "who", "when", "where", "help desk"]
+TIER_3_KEYWORDS = [
+    "partial disruption", "service instability", "intermittent failure", "unexpected behavior", 
+    "dependency issue", "integration broken",  "deployment issue", "rollback required", 
+    "resource exhaustion"
+]
 
-CRITICAL_KEYWORDS = ["data loss", "production down", "security breach"]
-HIGH_KEYWORDS = ["system down", "container crashed", "service unavailable"]
-MEDIUM_KEYWORDS = ["slow", "timeout", "login issue"]
+TIER_2_KEYWORDS = [
+    "account assistance", "access request",  "configuration help", "usage guidance", "setup clarification",
+    "feature explanation", "permission request", "environment setup", "connectivity issue"
+]
+
+TIER_0_KEYWORDS = [
+    "general inquiry", "basic question", "clarification needed", "product info", 
+    "service details", "availability info", "pricing info", "support contact", "how does it work"
+]
+
+
+CRITICAL_KEYWORDS = ["data loss", "production down", "security breach", "database down", "site down", "full outage", "complete outage", "data leak", "ransomware", "system hacked"]
+HIGH_KEYWORDS = ["system down", "container crashed", "service unavailable", "api down", "internal server error", "500 error", "503 error", "authentication failure", "disk full", "high memory usage"]
+MEDIUM_KEYWORDS = ["slow","timeout","login issue","latency", "performance issue","job failed","minor bug","page not loading",]
+
 
 def classify_tier(message: str, severity, kb_coverage, repeated_failure=False):
-
     msg = message.lower()
 
     # RULE 1: Critical or repeated failure
@@ -73,3 +85,4 @@ def should_escalate(tier, severity, kb_coverage, repeated_failure=False):
         return True
 
     return False
+

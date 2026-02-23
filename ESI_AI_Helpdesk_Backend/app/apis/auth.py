@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.utils.config import get_db
 from app.utils.jwt_security import verify_password,hash_password,create_access_token
@@ -13,7 +14,8 @@ auth_router = APIRouter()
 @auth_router.post("/login")
 def login(request: LoginRequest, db: Session = Depends(get_db)):
 
-    user = db.query(User).filter(User.email == request.email).first()
+    # user = db.query(User).filter(User.email == request.email).first()
+    user = db.query(User).filter(func.lower(User.email) == request.email.lower()).first()
 
     if not user or not verify_password(request.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
