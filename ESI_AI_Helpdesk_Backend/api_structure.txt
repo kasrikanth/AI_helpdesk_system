@@ -1,0 +1,159 @@
+API Structure and Endpoints
+
+Base URL: https://ai-helpdesk-system-vas2.onrender.com
+
+---
+
+### Authentication APIs
+
+1. **Login**
+   - **Endpoint**: POST /auth/login
+   - **Description**: Authenticates a user and returns a JWT token.
+   - **Request Payload**:
+     {
+       "username": "string",
+       "password": "string"
+     }
+   - **Response Payload**:
+     {
+       "access_token": "string",
+       "token_type": "string"
+     }
+   - **Authentication**: Not required.
+
+2. **Register**
+   - **Endpoint**: POST /auth/register
+   - **Description**: Registers a new user.
+   - **Request Payload**:
+     {
+       "username": "string",
+       "password": "string",
+       "role": "string"
+     }
+   - **Response Payload**:
+     {
+       "message": "User registered successfully."
+     }
+   - **Authentication**: Not required.
+
+---
+
+### Ticket Management APIs
+
+1. **Create Ticket**
+   - **Endpoint**: POST /tickets/create
+   - **Description**: Creates a new ticket.
+   - **Request Payload**:
+     {
+       "title": "string",
+       "description": "string",
+       "priority": "string"
+     }
+   - **Response Payload**:
+     {
+       "ticket_id": "string",
+       "message": "Ticket created successfully."
+     }
+   - **Authentication**: Required (JWT token).
+
+2. **get Ticket**
+   - **Endpoint**: PUT /tickets/{ticket_id}
+   - **Description**: get an existing ticket.
+   -
+   - **Response Payload**:
+     {
+    "id": "string",
+    "conversation_id": "uuid",
+    "subject": "string",
+    "description": "string",
+    "tier": "string",
+    "severity": "string",
+    "status": "string",
+    "user_role": "string",
+    "context": {},
+    "created_at": "datetime",
+    "updated_at": "datetime"
+     }
+    - **Authentication**: Required (JWT token).
+
+3. **get all Ticket**
+   - **Endpoint**: PUT /tickets/
+   - **Description**: get all existing ticket.
+   -
+   - **Response Payload**:
+     {
+    "id": "string",
+    "conversation_id": "uuid",
+    "subject": "string",
+    "description": "string",
+    "tier": "string",
+    "severity": "string",
+    "status": "string",
+    "user_role": "string",
+    "context": {},
+    "created_at": "datetime",
+    "updated_at": "datetime"
+     },
+     {
+    "id": "string",
+    "conversation_id": "uuid",
+    "subject": "string",
+    "description": "string",
+    "tier": "string",
+    "severity": "string",
+    "status": "string",
+    "user_role": "string",
+    "context": {},
+    "created_at": "datetime",
+    "updated_at": "datetime"
+     }
+    - **Authentication**: Required (JWT token).
+
+   2. **Update Ticket**
+   - **Endpoint**: PUT /tickets/update/{ticket_id}
+   - **Description**: Updates an existing ticket.
+   - **Request Payload**:
+     {
+       "status": "string",
+       "comments": "string"
+     }
+   - **Response Payload**:
+     {
+       "message": "Ticket updated successfully."
+     }
+   - **Authentication**: Required (JWT token).
+
+---
+
+### Metrics APIs
+
+1. **Get Metrics**
+   - **Endpoint**: GET /metrics
+   - **Description**: Retrieves system performance metrics.
+   - **Response Payload**:
+     {
+       "total_tickets": "integer",
+       "resolved_tickets": "integer",
+       "pending_tickets": "integer"
+     }
+   - **Authentication**: Required (JWT token).
+
+---
+
+### Error Patterns
+
+- **Standard Error Response**:
+  {
+    "error": {
+      "code": "integer",
+      "message": "string",
+      "details": "string"
+    }
+  }
+
+- **Common Error Codes**:
+  - 400 Bad Request: Invalid input data.
+  - 401 Unauthorized: Missing or invalid authentication token.
+  - 403 Forbidden: Insufficient permissions.
+  - 404 Not Found: Resource not found.
+  - 500 Internal Server Error: Unexpected server error.
