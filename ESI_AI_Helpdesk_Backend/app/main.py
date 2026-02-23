@@ -14,6 +14,7 @@ app = FastAPI(title="ESI AI Help Desk")
 origins = [
     "http://localhost:5173", 
     "http://127.0.0.1:5173",
+    "https://ai-helpdesk-frontend.vercel.app/",
 ]
 
 app.add_middleware(
