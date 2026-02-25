@@ -1,5 +1,6 @@
 # guardrail.py
 
+import re
 from app.apis.api_schema import GuardrailStatus
 
 CRITICAL_TERMS = {
@@ -150,17 +151,35 @@ MEDIUM_TERMS = {
     "threat"
 }
 
+
+def matches(pattern: str, text: str) -> bool:
+    """
+    Converts a phrase like 'drop database' into a regex that allows
+    filler words (the, a, an, my, this, all, entire, whole) between terms.
+    
+    'drop database'  → matches: 'drop database', 'drop the database',
+                                'drop my database', 'drop this database'
+    """
+    words = pattern.split()
+    if len(words) == 1:
+        return bool(re.search(rf'\b{re.escape(words[0])}\b', text))
+    
+    # Allow 0–2 filler words between each term
+    filler = r'(?:\s+(?:the|a|an|my|this|that|all|entire|whole|our|your|its|their|this|every|any)\s+|\s+)'
+    regex = filler.join(rf'\b{re.escape(w)}\b' for w in words)
+    return bool(re.search(regex, text, re.IGNORECASE))
+
 def check_guardrail(message: str) -> GuardrailStatus:
     msg = message.lower()
     for term in CRITICAL_TERMS:
-        if term in msg:
+        if matches(term, msg):
             return GuardrailStatus(blocked=True, reason=f"Restricted: '{term}'", severity="CRITICAL")
     for term in HIGH_TERMS:
-        if term in msg:
+        if matches(term, msg):
             return GuardrailStatus(blocked=True, reason=f"Restricted: '{term}'", severity="HIGH")
     for term in MEDIUM_TERMS:
-        if term in msg:
+        if matches(term, msg):
             return GuardrailStatus(blocked=True, reason=f"Restricted: '{term}'", severity="MEDIUM")
-        
+
     return GuardrailStatus(blocked=False, reason=None, severity="LOW")
 

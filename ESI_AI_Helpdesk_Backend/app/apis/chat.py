@@ -60,11 +60,29 @@ def chat(
         user_role = user.role.name
         print(f"User {user.email} with role {user_role} (level {user.role.level}) is making a request.")
 
+        prior_assistant_messages = db.query(Message).filter(
+            Message.conversation_id == conversation.id,
+            Message.role == "assistant"
+        ).count()
+
+        # Also check explicit user language signaling repeated failure
+        REPEATED_FAILURE_SIGNALS = [
+            "tried", "already", "still not", "didn't work", "doesn't work",
+            "still stuck", "same issue", "again", "twice", "multiple times",
+            "still broken", "still failing", "persists", "keeps happening"
+        ]
+        user_signals_repeat = any(
+            signal in req.message.lower()
+            for signal in REPEATED_FAILURE_SIGNALS
+        )
+
+        # Escalate if either: 2+ prior replies OR user explicitly says it's a repeat
+        repeated_failure = (prior_assistant_messages >= 2) or user_signals_repeat
+
         #================== GUARDRAIL CHECK =================
         guardrail = check_guardrail(req.message)
 
         if guardrail.blocked:
-            
             # Store guardrail violation message
             user_message = Message(conversation_id=conversation.id,
             role="user",content=req.message
@@ -72,7 +90,6 @@ def chat(
             db.add(user_message)
             db.commit()
 
-            # Log guardrail event
             guardrail_event = GuardrailEvent(
                 id = str(uuid4()),
                 conversation_id=conversation.id,
@@ -82,7 +99,6 @@ def chat(
             db.add(guardrail_event)
             db.commit()
 
-            # Log assistant message about guardrail violation
             assistant_message = Message(
             conversation_id=conversation.id,
             role="assistant",
@@ -117,36 +133,57 @@ def chat(
         kb_coverage = len(documents) > 0
 
         if not kb_coverage:
-            raise HTTPException(404, "No relevant documents found")
+            out_of_scope_reply = (
+                "I'm sorry, I can only answer questions related to the CyberLab "
+                "Training Platform — such as authentication, virtual labs, containers, "
+                "DNS, and access issues.If you believe this is a platform-related "
+                "issue, please try rephrasing your question."
+            )
+            assistant_message = Message(
+                conversation_id=conversation.id,
+                role="assistant",
+                confidence=0.0,
+                content=out_of_scope_reply
+            )
+            db.add(assistant_message)
+            db.commit()
+
+            return ChatResponse(
+                answer=out_of_scope_reply,
+                kbReferences=[],
+                confidence=0.0,
+                tier="TIER_0",
+                severity="LOW",
+                needsEscalation=False,
+                guardrail=guardrail,
+                ticket_id=None,
+                ticket_status=None)
 
         docs = [r["doc"] for r in documents]
-        
-        # Generate Answer
-        answer = generate_answer(req.message, docs)
 
-        # Calculate Confidence using advanced logic
+        # Generate Answer
+        answer = generate_answer(req.message, docs, user_role=user_role)
+
+        # Calculate Confidence
         confidence = compute_response_confidence(
-            docs=[{"similarity": r.get("similarity") or r.get("score", 0.0)}
+            docs=[{"similarity": r.get("similarity", r.get("score", 0.0))} 
                 for r in documents],
             response_text=answer
         )
-        
+
         # Severity check
         severity = classify_severity(req.message)
 
         # Tier check
-        tier = classify_tier(req.message,severity,kb_coverage,
-            repeated_failure=False)
+        tier = classify_tier(req.message,severity,kb_coverage,repeated_failure=repeated_failure)
 
         #============ Escalation handler =================#
         needs_escalation = should_escalate(tier,severity,
-            kb_coverage,repeated_failure=False)
+             kb_coverage,repeated_failure=repeated_failure)
 
         ticket = None
 
-        last_ticket = (db.query(Ticket)
-        .order_by(Ticket.created_at.desc()).first())
-
+        last_ticket = db.query(Ticket).order_by(Ticket.created_at.desc()).first()
         if last_ticket and last_ticket.id.startswith("TICK-"):
             last_number = int(last_ticket.id.split("-")[1])
             new_number = last_number + 1
@@ -155,12 +192,12 @@ def chat(
 
         new_ticket_id = f"TICK-{new_number:05d}"
 
-        # Escalatation Ticket Creation
+        # Escalation Ticket Creation
         if needs_escalation:
             ticket = Ticket(
                 id=new_ticket_id,
                 conversation_id=conversation.id,
-                user_id = current_user["sub"],  # ADD THIS
+                user_id = current_user["sub"],
                 subject=req.message[:200],
                 description=req.message,
                 tier=tier.value,
@@ -174,7 +211,6 @@ def chat(
             db.add(ticket)
             db.commit()
 
-            # insert assistant message about escalation
             assistant_message = Message(
             conversation_id=conversation.id,
             role="assistant",
@@ -185,7 +221,7 @@ def chat(
             db.commit()
 
             return ChatResponse(
-            answer="I'm sorry, but I cannot assist with that request due to its severity or lack of KB coverage. An escalation ticket has been created for further review.",
+            answer=answer,
             kbReferences=[
                 KBReference(
                     id=r["doc"].metadata.get("kb_id"),
@@ -199,8 +235,11 @@ def chat(
             needsEscalation=needs_escalation,
             guardrail=guardrail,
             ticket_id=ticket.id,
-            ticket_status = "Ticket escalated due to issue severity or lack of KB coverage"
-        )
+            ticket_status=(
+                    f"A support ticket ({ticket.id}) has been created and assigned to "
+                    f"{tier.value}. Our team will follow up with you shortly."
+                )
+            )
 
         # Store assistant message
         assistant_message = Message(

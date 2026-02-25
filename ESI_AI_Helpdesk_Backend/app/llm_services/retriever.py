@@ -11,7 +11,10 @@ embedder = OpenAIEmbeddings(
     openai_api_key=OPENAI_API_KEY
 )
 
-def retrieve_kb(question: str, k: int = 1):
+# Minimum similarity threshold — documents below this are too weak to use
+MIN_SIMILARITY_THRESHOLD = 0.20
+
+def retrieve_kb(question: str, k: int = 5):
     db = SessionLocal()
     query_embedding = embedder.embed_query(question)
 
@@ -33,12 +36,18 @@ def retrieve_kb(question: str, k: int = 1):
     documents = []
 
     for row in results:
+        similarity = float(row.score)
+
+        # Skip documents that are too weakly related
+        if similarity < MIN_SIMILARITY_THRESHOLD:
+            continue
         documents.append({
             "doc": Document(
                 page_content=row.content,
                 metadata=row.doc_metadata or {}
             ),
-            "score": float(row.score)  # IMPORTANT
+            "score": similarity,
+            "similarity": similarity  # FIX: was missing — confidence calculator reads this key
         })
 
     return documents

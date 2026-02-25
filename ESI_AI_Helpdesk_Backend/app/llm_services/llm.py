@@ -1,3 +1,5 @@
+# llm.py
+
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 from app.utils.config import OPENAI_API_KEY
@@ -9,28 +11,26 @@ llm = ChatOpenAI(
     temperature=0
 )
 
-def generate_answer(question, docs):
+def generate_answer(question: str, docs: list, user_role: str = "trainee") -> str:
     context = "\n\n".join(
-        f"[{d.metadata['kb_id']} | v{d.metadata['version']}]\n{d.page_content}"
+        f"[{d.metadata.get('kb_id', 'unknown')} | v{d.metadata.get('version', '?')}]\n{d.page_content}"
         for d in docs)
     
-    prompt = PROMPT_TEMPLATE.format(context=context, question=question)
+    prompt = PROMPT_TEMPLATE.format(context=context,question=question,user_role=user_role.upper() )
     response = llm.invoke([HumanMessage(content=prompt)])
-
     return response.content
 
 def compute_response_confidence(docs: List[Dict[str, Any]], response_text: str) -> float:
-    # No documents → zero confidence
     if not docs:
         return 0.0
 
     negative_indicators = {
-        "not covered in the knowledge base","not in the knowledge base","no information",
-        "cannot find","is not available", "i don't have","missing from the knowledge base",
-        "no record available","information not present","unavailable in current data","not documented",
-        "no entry found","data not available","not stored in the system","no matching information",
-        "knowledge gap","not tracked","no reference found","absent from records","cannot locate",
-        "no relevant data", "not part of the database", "no support information","no details available"
+        "not covered in the knowledge base", "not in the knowledge base", "no information",
+        "cannot find", "is not available", "i don't have", "missing from the knowledge base",
+        "no record available", "information not present", "unavailable in current data", "not documented",
+        "no entry found", "data not available", "not stored in the system", "no matching information",
+        "knowledge gap", "not tracked", "no reference found", "absent from records", "cannot locate",
+        "no relevant data", "not part of the database", "no support information", "no details available"
     }
 
     response_lower = response_text.lower()
@@ -75,9 +75,8 @@ def compute_response_confidence(docs: List[Dict[str, Any]], response_text: str) 
 
     # Signals suggesting grounded explanation
     reference_clues = [
-        "according to", "documented in", "as outlined",
-        "per the", "kb-", "steps:", "here's how",
-        "follow these steps", "the process",
+        "according to", "documented in", "as outlined", "per the", "kb-",
+         "steps:", "here's how", "follow these steps", "the process",
         "in the knowledge base", "provided in"
     ]
 
@@ -85,18 +84,10 @@ def compute_response_confidence(docs: List[Dict[str, Any]], response_text: str) 
     if clue_hits >= 2:
         base_conf += 0.04
 
-    # Penalize extremely short answers
     if len(response_text.strip()) < 50:
         base_conf -= 0.10
 
-    # Enforce lower bound if similarity is decent
     if mean_score >= 0.25 and base_conf < 0.80:
         base_conf = 0.80
 
-    # Clamp value between 0 and 1
-    base_conf = min(max(base_conf, 0.0), 1.0)
-
-    return round(base_conf, 2)
-
-
-
+    return round(min(max(base_conf, 0.0), 1.0), 2)
