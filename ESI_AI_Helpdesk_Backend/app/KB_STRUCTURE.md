@@ -8,7 +8,7 @@ The Knowledge Base (KB) is a critical component of the ESI AI Helpdesk Backend. 
   - The KB articles are stored as Markdown files in the `kbs/` directory.
   - Each file represents a specific topic or document, named systematically for easy identification (e.g., `01-access-and-authentication-v2.1.md`).
 - **Database**:
-  - Metadata about the KB articles, such as titles, tags, and creation dates, is stored in a SQLite database (`chroma.sqlite3`).
+  - Metadata about the KB articles, such as titles, tags, and creation dates, is stored in a SQLite database (`postgres.pgvector`).
 
 ## Ingestion
 1. **Process**:
@@ -25,7 +25,7 @@ The Knowledge Base (KB) is a critical component of the ESI AI Helpdesk Backend. 
    - The content of each KB article is converted into vector embeddings using a pre-trained language model.
    - These embeddings capture the semantic meaning of the text.
 2. **Storage**:
-   - The embeddings are stored in the `chroma.sqlite3` database for efficient similarity searches.
+   - The embeddings are stored in the `postgres.pgvector` database for efficient similarity searches.
 3. **Indexing Tool**:
    - The `retriever.py` module is responsible for indexing and managing the embeddings.
 
