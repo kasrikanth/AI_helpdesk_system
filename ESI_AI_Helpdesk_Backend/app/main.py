@@ -5,6 +5,8 @@ from app.apis.auth import auth_router
 from app.apis.tickets import ticket_router
 from app.apis.metrics import metrics_router
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
+from fastapi.responses import JSONResponse
 
 logging.basicConfig(level=logging.INFO)
 
@@ -14,7 +16,7 @@ app = FastAPI(title="ESI AI Help Desk")
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://ai-helpdesk-frontend.vercel.app"
+    "https://ai-helpdesk-system.vercel.app"
 ]
 
 app.add_middleware(
@@ -32,3 +34,15 @@ app.include_router(ticket_router, prefix="/tickets", tags=["Tickets"])
 app.include_router(metrics_router, prefix="/metrics", tags=["Metrics"])
 
 
+# Health Check API
+@app.get("/health", tags=["Health"])
+async def health_check():
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "ESI AI Help Desk",
+            "timestamp": datetime.now().strftime("%d-%m-%Y %I:%M:%S %p"),
+            "version": "1.0.0"
+        }
+    )
