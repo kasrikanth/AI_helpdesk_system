@@ -138,6 +138,8 @@ class MetricsTrends(BaseModel):
     ticket_volume: List[TrendDataPoint]
 
 
+## not using
+
 # -------- Response --------
 class KBIngestionResponse(BaseModel):
     message: str

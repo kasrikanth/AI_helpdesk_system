@@ -20,7 +20,7 @@ TIER_2_KEYWORDS = [
     "environment setup", "connectivity issue"
 ]
 
-TIER_0_KEYWORDS = [
+TIER_1_KEYWORDS = [
     "general inquiry", "basic question", "clarification needed", "product info",
     "service details", "availability info", "pricing info", "support contact",
     "how does it work"
@@ -118,10 +118,10 @@ def classify_tier(message: str, severity: SeverityLevel, kb_coverage: bool, repe
         return TierLevel.TIER_3
     if any(k in msg for k in TIER_2_KEYWORDS):
         return TierLevel.TIER_2
-    if any(k in msg for k in TIER_0_KEYWORDS):
-        return TierLevel.TIER_0
+    if any(k in msg for k in TIER_1_KEYWORDS):
+        return TierLevel.TIER_1
 
-    return TierLevel.TIER_1
+    return TierLevel.TIER_0
 
 def classify_severity(message: str) -> SeverityLevel:
     msg = message.lower()

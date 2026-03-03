@@ -65,19 +65,34 @@ def chat(
             Message.role == "assistant"
         ).count()
 
-        # Also check explicit user language signaling repeated failure
-        REPEATED_FAILURE_SIGNALS = [
-            "tried", "already", "still not", "didn't work", "doesn't work",
-            "still stuck", "same issue", "again", "twice", "multiple times",
-            "still broken", "still failing", "persists", "keeps happening"
-        ]
-        user_signals_repeat = any(
-            signal in req.message.lower()
-            for signal in REPEATED_FAILURE_SIGNALS
-        )
+        FRUSTRATION_WEIGHTS = {
+            "still not working": 3,
+            "didn't work": 3,
+            "doesn't work": 3,
+            "same issue": 2,
+            "already tried": 2,
+            "still stuck": 2,
+            "still broken": 2,
+            "still failing": 2,
+            "keeps happening": 2,
+            "persists": 2,
+            "again": 1,
+            "twice": 1,
+            "multiple times": 1,
+            "tried": 1,
+            "already": 1
+        }
 
-        # Escalate if either: 2+ prior replies OR user explicitly says it's a repeat
-        repeated_failure = (prior_assistant_messages >= 2) or user_signals_repeat
+        message_lower = req.message.lower()
+
+        frustration_score = sum(
+            weight for phrase, weight in FRUSTRATION_WEIGHTS.items()
+            if phrase in message_lower)
+        print(frustration_score)
+
+        # Escalate only if frustration score crosses threshold
+        repeated_failure = frustration_score >= 2
+        print(repeated_failure)
 
         #================== GUARDRAIL CHECK =================
         guardrail = check_guardrail(req.message)
@@ -164,7 +179,7 @@ def chat(
         # Generate Answer
         answer = generate_answer(req.message, docs, user_role=user_role)
 
-        # Calculate Confidence
+        # Calculate Confidence score for llm answer
         confidence = compute_response_confidence(
             docs=[{"similarity": r.get("similarity", r.get("score", 0.0))} 
                 for r in documents],
