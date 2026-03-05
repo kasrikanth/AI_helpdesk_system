@@ -299,10 +299,10 @@ useEffect(() => {
 
       if (formatted.needsEscalation && formatted.ticketId) {
 
-        setEscalationStatus({
-          message: `🎫 Ticket ${formatted.ticketId} created`,
-          status: 'active',
-        });
+        // setEscalationStatus({
+        //   message: `🎫 Ticket ${formatted.ticketId} created`,
+        //   status: 'active',
+        // });
 
         // Update conversation context
         setConversationContext(prev => ({
