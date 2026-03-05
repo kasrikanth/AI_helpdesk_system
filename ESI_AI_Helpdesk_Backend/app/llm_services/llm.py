@@ -1,15 +1,18 @@
 # llm.py
 
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 from app.utils.config import OPENAI_API_KEY
 from app.llm_services.prompts import PROMPT_TEMPLATE
 from typing import List, Dict, Any
+from app.llm_services.llm_factory import get_llm
 
-llm = ChatOpenAI(
-    openai_api_key=OPENAI_API_KEY,
-    temperature=0
-)
+# llm = ChatOpenAI(
+#     openai_api_key=OPENAI_API_KEY,
+#     temperature=0
+# )
+
+llm = get_llm()
 
 def generate_answer(question: str, docs: list, user_role: str = "trainee") -> str:
     context = "\n\n".join(

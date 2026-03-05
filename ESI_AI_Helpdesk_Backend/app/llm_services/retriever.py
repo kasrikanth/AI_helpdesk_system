@@ -2,14 +2,16 @@
 
 from sqlalchemy import text
 from app.utils.config import SessionLocal, OPENAI_API_KEY
-from langchain_openai import OpenAIEmbeddings
+# from langchain_openai import OpenAIEmbeddings
 from langchain_core.documents import Document
+from app.llm_services.embedding_factory import get_embedder
 
+# embedder = OpenAIEmbeddings(
+#     model="text-embedding-3-small",
+#     openai_api_key=OPENAI_API_KEY
+# )
 
-embedder = OpenAIEmbeddings(
-    model="text-embedding-3-small",
-    openai_api_key=OPENAI_API_KEY
-)
+embedder = get_embedder()
 
 # Minimum similarity threshold — documents below this are too weak to use
 MIN_SIMILARITY_THRESHOLD = 0.20

@@ -6,10 +6,11 @@ from datetime import date, datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import delete
 from app.models.database import KBDocument
-from langchain_openai import OpenAIEmbeddings
+# from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from app.utils.config import OPENAI_API_KEY
 import logging
+from app.llm_services.embedding_factory import get_embedder
 
 
 KB_DIR = "kbs"
@@ -46,10 +47,12 @@ def load_kbs(db: Session, created_by: str, replace_existing: bool = False):
         chunk_overlap=80
     )
 
-    embedder = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=OPENAI_API_KEY
-    )
+    # embedder = OpenAIEmbeddings(
+    #     model="text-embedding-3-small",
+    #     openai_api_key=OPENAI_API_KEY
+    # )
+
+    embedder = get_embedder()
 
     for md_file in Path(KB_DIR).glob("*.md"):
 

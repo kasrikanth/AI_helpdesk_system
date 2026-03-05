@@ -27,6 +27,7 @@ def fetch_metrics_overview(db: Session = Depends(get_db)):
             or 0
         )
 
+        # conversation resolved without tickets
         resolved_without_ticket = max(
             conversation_count - conversations_with_ticket, 0
         )
@@ -63,14 +64,6 @@ def fetch_metrics_overview(db: Session = Depends(get_db)):
         )
 
 
-        escalation_total = (
-            db.query(func.count(Ticket.id))
-            .filter(Ticket.tier == "tier_3")
-            .scalar()
-            or 0
-        )
-
-
         return MetricsSummary(
             total_conversations=conversation_count,
             total_tickets=ticket_count,
@@ -78,9 +71,8 @@ def fetch_metrics_overview(db: Session = Depends(get_db)):
             avg_confidence=round(avg_confidence_value, 2),
             guardrail_activations=guardrail_count,
             tickets_by_tier=tier_distribution,
-            tickets_by_severity=severity_distribution,
-            escalation_count=escalation_total
-        )
+            tickets_by_severity=severity_distribution
+            )
 
     except Exception as e:
         raise HTTPException(
